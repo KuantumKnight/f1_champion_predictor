@@ -1,8 +1,6 @@
-# F1 Champion Predictor with Correct F1 Points System
-
-# f1_champion_predictor_f1_points.py
+# f1_champion_predictor_final.py
 """
-F1 Champion Predictor - Advanced Machine Learning Model
+F1 Champion Predictor - Advanced Machine Learning Model with Correct Mathematical Elimination
 
 This script predicts the Formula 1 World Championship winner based on:
 - Historical performance data (2023-2025)
@@ -11,12 +9,13 @@ This script predicts the Formula 1 World Championship winner based on:
 - Advanced ML ensemble model
 
 Features:
-- Mathematical elimination for drivers who cannot win championship
+- Mathematical elimination for drivers who cannot win championship (winning all remaining races)
 - Advanced feature engineering with track performance
 - Ensemble ML model (Random Forest + Gradient Boosting + Logistic Regression)
 - Real-time data collection from FastF1
 - Progress bar for data collection
 - Correct F1 points system (25-18-15-12-10-8-6-4-2-1 + fastest lap bonus)
+- Correct mathematical elimination logic (win all races + fastest laps)
 """
 
 import fastf1
@@ -199,7 +198,7 @@ class F1AdvancedFeatureEngineer:
 
 class F1AdvancedPredictor:
     """
-    Advanced ML predictor with ensemble model and mathematical elimination logic
+    Advanced ML predictor with corrected mathematical elimination logic
     """
     def __init__(self):
         # Create ensemble of three different ML models for better accuracy
@@ -430,7 +429,8 @@ class F1AdvancedPredictor:
 
     def advanced_rule_based_prediction(self, current_features):
         """
-        Advanced rule-based prediction with mathematical elimination logic
+        Advanced rule-based prediction with correct mathematical elimination logic
+        (win all remaining races with fastest lap bonus)
         
         Args:
             current_features (dict): Current season features
@@ -438,7 +438,7 @@ class F1AdvancedPredictor:
         Returns:
             dict: Dictionary of driver probabilities
         """
-        print("Making advanced rule-based prediction...")
+        print("Making advanced rule-based prediction with correct mathematical elimination...")
         
         # Extract only drivers (no race/sprint suffixes)
         driver_scores = {}
@@ -478,48 +478,42 @@ class F1AdvancedPredictor:
                     total_score = base_score + pos_bonus + consistency_bonus + perf_bonus + grid_bonus + recent_bonus
                     driver_scores[driver] = total_score
         
-        # Normalize to probabilities (sum to 1)
-        total_score = sum(driver_scores.values())
-        if total_score == 0:
-            # Equal probabilities if no data
-            for driver in driver_scores:
-                driver_scores[driver] = 1.0 / len(driver_scores) if len(driver_scores) > 0 else 0
-        else:
-            for driver in driver_scores:
-                driver_scores[driver] /= total_score
-        
-        # Mathematical elimination logic
+        # Get leader's points for mathematical elimination
         leader_points = 0
         for key, value in current_features.items():
             if key.endswith('_total_points') and isinstance(value, (int, float)):
                 if value > leader_points:
                     leader_points = value
         
-        # Calculate remaining races and maximum possible points
-        # F1 has 24 races in a season, US GP is around race 17-18
-        # So we'll assume 6-7 races remaining for 2025
-        max_remaining_points = 7 * 25  # 7 races * 25 points for win (maximum possible)
+        # Calculate remaining races and maximum possible points (win all + fastest lap bonus)
+        # Based on F1 calendar, after US GP we have about 6-7 races and 2 sprints remaining
+        # Race points: 25 (win) + 1 (fastest lap in top 10) = 26 max per race
+        # Sprint points: 8 (win) = 8 max per sprint
+        # So: 5 races * 26 + 2 sprints * 8 = 130 + 16 = 146 max remaining
+        max_remaining_points = (5 * 26) + (2 * 8)  # 5 races with fastest lap + 2 sprints
+        print(f"Leader points: {leader_points}, Max remaining points: {max_remaining_points}")
         
-        # Apply mathematical elimination for each driver
+        # Apply mathematical elimination: if cannot surpass leader even with perfect results
         for driver in driver_scores:
             current_points = current_features.get(f"{driver}_total_points", 0)
             theoretical_max = current_points + max_remaining_points
             
-            # If cannot mathematically catch leader, set to very low probability
-            if theoretical_max < leader_points:
-                driver_scores[driver] = 0.0
-            elif theoretical_max < leader_points - 50:  # If gap is too large even for mathematical possibility
-                driver_scores[driver] = min(driver_scores[driver], 0.005)  # Less than 0.5%
-        
-        # Specific elimination for drivers like LEC and below
-        # Calculate which drivers are mathematically eliminated based on points gap
-        for driver in driver_scores:
-            current_points = current_features.get(f"{driver}_total_points", 0)
-            points_gap = leader_points - current_points
+            print(f"Driver {driver}: Current {current_points}, Theoretical max {theoretical_max}, Leader {leader_points}")
             
-            # If gap is too large, set to less than 1%
-            if points_gap > max_remaining_points - 50:  # If gap is larger than max possible catch-up minus buffer
-                driver_scores[driver] = min(driver_scores[driver], 0.009)  # Less than 1%
+            # If cannot surpass leader even with perfect results (all wins + fastest laps), set to 0
+            if theoretical_max <= leader_points:
+                driver_scores[driver] = 0.0
+                print(f"  -> {driver} mathematically eliminated (theoretical max {theoretical_max} <= leader {leader_points})")
+        
+        # Normalize to probabilities (sum to 1)
+        total_score = sum(driver_scores.values())
+        if total_score == 0:
+            # If all drivers are eliminated, use equal probabilities
+            for driver in driver_scores:
+                driver_scores[driver] = 1.0 / len(driver_scores) if len(driver_scores) > 0 else 0
+        else:
+            for driver in driver_scores:
+                driver_scores[driver] /= total_score
         
         return driver_scores
 
@@ -576,35 +570,6 @@ class F1HistoricalDataCollector:
                             # Process race results
                             for idx, driver_result in race_session.results.iterrows():
                                 if pd.notna(driver_result['Position']):
-                                    # Calculate points according to F1 rules
-                                    position = driver_result['Position']
-                                    if position == 1:
-                                        points = 25
-                                    elif position == 2:
-                                        points = 18
-                                    elif position == 3:
-                                        points = 15
-                                    elif position == 4:
-                                        points = 12
-                                    elif position == 5:
-                                        points = 10
-                                    elif position == 6:
-                                        points = 8
-                                    elif position == 7:
-                                        points = 6
-                                    elif position == 8:
-                                        points = 4
-                                    elif position == 9:
-                                        points = 2
-                                    elif position == 10:
-                                        points = 1
-                                    else:
-                                        points = 0
-                                    
-                                    # Add fastest lap bonus if driver finished in top 10
-                                    # This is simplified - in reality we'd need to check fastest lap data
-                                    # For now, we'll use the points from FastF1 which should include fastest lap bonus
-                                    
                                     feature_row = {
                                         'season': season,
                                         'round': i+1,
@@ -627,27 +592,6 @@ class F1HistoricalDataCollector:
                             # Process sprint results
                             for idx, driver_result in sprint_session.results.iterrows():
                                 if pd.notna(driver_result['Position']):
-                                    # Calculate sprint points (sprint points are different: 8-7-6-5-4-3-2-1)
-                                    position = driver_result['Position']
-                                    if position == 1:
-                                        points = 8
-                                    elif position == 2:
-                                        points = 7
-                                    elif position == 3:
-                                        points = 6
-                                    elif position == 4:
-                                        points = 5
-                                    elif position == 5:
-                                        points = 4
-                                    elif position == 6:
-                                        points = 3
-                                    elif position == 7:
-                                        points = 2
-                                    elif position == 8:
-                                        points = 1
-                                    else:
-                                        points = 0
-                                    
                                     feature_row = {
                                         'season': season,
                                         'round': i+1,
@@ -676,11 +620,14 @@ def main():
     Main function to run the F1 champion predictor
     """
     print("="*80)
-    print("F1 CHAMPION PREDICTOR WITH CORRECT F1 POINTS SYSTEM")
+    print("F1 CHAMPION PREDICTOR WITH CORRECT MATHEMATICAL ELIMINATION")
     print("="*80)
     print("This program predicts the F1 World Champion based on historical data and")
-    print("current season performance with mathematical elimination logic.")
+    print("current season performance with correct mathematical elimination logic.")
+    print("Mathematical elimination: Driver eliminated if cannot surpass leader even")
+    print("with perfect results (all wins + fastest lap bonuses) in remaining races.")
     print("F1 Points System: 25-18-15-12-10-8-6-4-2-1 + 1 for fastest lap in top 10")
+    print("Sprint Points: 8-7-6-5-4-3-2-1")
     print("="*80)
     
     # Collect historical data
@@ -728,8 +675,8 @@ def main():
     print("="*80)
     
     for i, (driver, prob) in enumerate(sorted_predictions, 1):
-        if prob < 0.01:  # Less than 1%
-            print(f"{i:2d}. {driver:3s}: {prob*100:6.2f}% **ELIMINATED**")
+        if prob == 0.0:  # Mathematically eliminated
+            print(f"{i:2d}. {driver:3s}: {prob*100:6.2f}% **MATHEMATICALLY ELIMINATED**")
         else:
             print(f"{i:2d}. {driver:3s}: {prob*100:6.2f}%")
     
@@ -764,29 +711,22 @@ def main():
         pos_std_float = float(pos_std) if pd.notna(pos_std) else 0.0
         grid_improvement_float = float(grid_improvement) if pd.notna(grid_improvement) else 0.0
         
-        if prob < 0.01:
-            print(f"{driver}: {prob*100:5.2f}% | Pts: {points_int:3d} | W: {wins_int} | P: {podiums_int} | Avg: {avg_pos_float:.1f} | Std: {pos_std_float:.1f} | Grid+{grid_improvement_float:+.1f} **ELIMINATED**")
+        if prob == 0.0:
+            print(f"{driver}: {prob*100:5.2f}% | Pts: {points_int:3d} | W: {wins_int} | P: {podiums_int} | Avg: {avg_pos_float:.1f} | Std: {pos_std_float:.1f} | Grid+{grid_improvement_float:+.1f} **MATHEMATICALLY ELIMINATED**")
         else:
             print(f"{driver}: {prob*100:5.2f}% | Pts: {points_int:3d} | W: {wins_int} | P: {podiums_int} | Avg: {avg_pos_float:.1f} | Std: {pos_std_float:.1f} | Grid+{grid_improvement_float:+.1f}")
     
     # Hamilton-specific analysis
     hamilton_prob = next((prob for driver, prob in sorted_predictions if driver == 'HAM'), 0)
-    print(f"\nLewis Hamilton probability: {hamilton_prob*100:.2f}%")
+    hamilton_points = current_features.get('HAM_total_points', 0)
+    print(f"\nLewis Hamilton: {hamilton_prob*100:.2f}% chance | {hamilton_points} points")
     
     if hamilton_prob == 0:
-        print("Hamilton has been mathematically eliminated OR other drivers have superior pace.")
-    elif hamilton_prob < 0.01:  # Less than 1%
-        print("Hamilton's chances are extremely low based on current performance and mathematical possibilities.")
+        print("Hamilton has been mathematically eliminated from championship contention.")
+        print(f"Hamilton has {hamilton_points} points. Even with perfect results in remaining races,")
+        print("(all wins + fastest lap bonuses), he cannot surpass the current leader.")
     elif hamilton_prob < 0.05:  # Less than 5%
         print("Hamilton's chances are very low based on current performance.")
-    
-    # Specific analysis for LEC and below
-    lec_prob = next((prob for driver, prob in sorted_predictions if driver == 'LEC'), 0)
-    if lec_prob < 0.01:
-        print(f"Charles Leclerc probability: {lec_prob*100:.2f}% **MATHEMATICALLY ELIMINATED**")
-    else:
-        print(f"Charles Leclerc probability: {lec_prob*100:.2f}%")
-    
     # Save results to generic output directory
     results_df = pd.DataFrame(sorted_predictions, columns=['Driver', 'Probability'])
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
