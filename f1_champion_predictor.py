@@ -3,7 +3,7 @@
 F1 Champion Predictor - Advanced Machine Learning Model with Correct Mathematical Elimination
 
 This script predicts the Formula 1 World Championship winner based on:
-- Historical performance data (2023-2025)
+- Historical performance data (last 2 years + current year)
 - Current season statistics
 - Mathematical elimination logic
 - Advanced ML ensemble model
@@ -16,6 +16,9 @@ Features:
 - Progress bar for data collection
 - Correct F1 points system (25-18-15-12-10-8-6-4-2-1 + fastest lap bonus)
 - Correct mathematical elimination logic (win all races + fastest laps)
+- Dynamic current year prediction (works for any year)
+- Uses last 2 years + current year for training data
+- Clean output with eliminated drivers sorted by points
 """
 
 import fastf1
@@ -51,8 +54,8 @@ class F1AdvancedFeatureEngineer:
     """
     Advanced feature engineering class that extracts comprehensive driver statistics
     """
-    def __init__(self, season=2025):
-        self.season = season
+    def __init__(self, season=None):
+        self.season = season if season else datetime.now().year
         self.features = {}
     
     def calculate_track_performance(self, driver_abbr, historical_df):
@@ -222,7 +225,7 @@ class F1AdvancedPredictor:
         
     def prepare_training_data(self, historical_df):
         """
-        Prepare training data from historical seasons (2023, 2024)
+        Prepare training data from last 2 completed seasons + current year data
         
         Args:
             historical_df (DataFrame): Historical race data
@@ -234,7 +237,17 @@ class F1AdvancedPredictor:
         
         # Identify champions from previous seasons for training labels
         season_champions = {}
-        for season in [2023, 2024]:  # Use 2023 and 2024 as training data
+        # Use the last 2 completed seasons as training data
+        current_year = datetime.now().year
+        # Only use completed seasons (not current year)
+        if datetime.now().month > 11:  # If after November, current year is likely complete
+            training_seasons = [current_year - 1, current_year - 2]
+        else:  # Otherwise, use last 2 completed years
+            training_seasons = [current_year - 1, current_year - 2]
+        
+        print(f"Using seasons {training_seasons} for training data")
+        
+        for season in training_seasons:
             season_data = historical_df[historical_df['season'] == season]
             if len(season_data) > 0:
                 driver_points = season_data.groupby('driver')['points'].sum()
@@ -246,7 +259,7 @@ class F1AdvancedPredictor:
         # Prepare feature matrix and labels
         X, y = [], []
         
-        for season in [2023, 2024]:
+        for season in training_seasons:
             season_data = historical_df[historical_df['season'] == season]
             if len(season_data) == 0:
                 continue
@@ -357,12 +370,13 @@ class F1AdvancedPredictor:
             print("Advanced model accuracy too low, will use advanced rule-based prediction")
             self.trained = False
 
-    def predict_2025_champion(self, current_features):
+    def predict_champion(self, current_features, current_year):
         """
-        Predict 2025 champion based on current features
+        Predict champion for current year based on current features
         
         Args:
             current_features (dict): Current season features
+            current_year (int): Current year to predict for
         
         Returns:
             dict: Dictionary of driver probabilities
@@ -486,11 +500,33 @@ class F1AdvancedPredictor:
                     leader_points = value
         
         # Calculate remaining races and maximum possible points (win all + fastest lap bonus)
-        # Based on F1 calendar, after US GP we have about 6-7 races and 2 sprints remaining
-        # Race points: 25 (win) + 1 (fastest lap in top 10) = 26 max per race
-        # Sprint points: 8 (win) = 8 max per sprint
-        # So: 5 races * 26 + 2 sprints * 8 = 130 + 16 = 146 max remaining
-        max_remaining_points = (5 * 26) + (2 * 8)  # 5 races with fastest lap + 2 sprints
+        # F1 typically has 24 races per season, so remaining races = 24 - completed races
+        # We'll estimate remaining races based on current date
+        current_month = datetime.now().month
+        current_day = datetime.now().day
+        
+        # Estimate remaining races based on typical F1 calendar
+        if current_month >= 11:  # Late season, typically 2-3 races left
+            remaining_races = 3
+            remaining_sprints = 1
+        elif current_month >= 10:  # October, typically 4-6 races left
+            remaining_races = 5
+            remaining_sprints = 2
+        elif current_month >= 9:  # September, typically 6-8 races left
+            remaining_races = 7
+            remaining_sprints = 2
+        elif current_month >= 7:  # July-August, typically 10-12 races left
+            remaining_races = 10
+            remaining_sprints = 4
+        elif current_month >= 5:  # May-June, typically 15-18 races left
+            remaining_races = 16
+            remaining_sprints = 6
+        else:  # Early season
+            remaining_races = 22
+            remaining_sprints = 8
+        
+        # Calculate maximum possible points (win all races + fastest laps + sprints)
+        max_remaining_points = (remaining_races * 26) + (remaining_sprints * 8)  # 26 = 25 win + 1 fastest lap, 8 = sprint win
         print(f"Leader points: {leader_points}, Max remaining points: {max_remaining_points}")
         
         # Apply mathematical elimination: if cannot surpass leader even with perfect results
@@ -524,18 +560,20 @@ class F1HistoricalDataCollector:
     def __init__(self):
         self.historical_data = []
     
-    def collect_historical_data_2023_to_usgp_2025(self):
+    def collect_historical_data_current_year(self):
         """
-        Collect historical data from 2023 to US GP 2025 including sprints
+        Collect historical data from last 2 years + current year up to latest completed race
         
         Returns:
             DataFrame: Historical race and sprint data
         """
-        print("Collecting historical data from 2023 to US GP 2025...")
+        current_year = datetime.now().year
+        # Collect from current year - 2 to current year
+        start_year = current_year - 2
+        print(f"Collecting historical data from {start_year} to latest completed race in {current_year}...")
         
-        # Define seasons and cutoff date
-        seasons = [2023, 2024, 2025]
-        cutoff_date = datetime(2025, 10, 23)  # US GP date
+        # Define seasons to collect (last 2 years + current year)
+        seasons = [start_year, start_year + 1, current_year]
         
         all_features = []
         
@@ -561,7 +599,8 @@ class F1HistoricalDataCollector:
             for i in range(len(schedule)):
                 try:
                     event = schedule.iloc[i]
-                    if event['EventDate'] <= cutoff_date and event['EventDate'] < datetime.now():
+                    # Only process events that have already happened
+                    if event['EventDate'] < datetime.now():
                         # Get race data
                         try:
                             race_session = fastf1.get_session(season, i+1, 'R')
@@ -617,22 +656,25 @@ class F1HistoricalDataCollector:
 
 def main():
     """
-    Main function to run the F1 champion predictor
+    Main function to run the F1 champion predictor for current year
     """
+    current_year = datetime.now().year
+    
     print("="*80)
-    print("F1 CHAMPION PREDICTOR WITH CORRECT MATHEMATICAL ELIMINATION")
+    print(f"F1 CHAMPION PREDICTOR FOR {current_year}")
     print("="*80)
-    print("This program predicts the F1 World Champion based on historical data and")
+    print(f"This program predicts the F1 World Champion for {current_year} based on historical data and")
     print("current season performance with correct mathematical elimination logic.")
     print("Mathematical elimination: Driver eliminated if cannot surpass leader even")
     print("with perfect results (all wins + fastest lap bonuses) in remaining races.")
     print("F1 Points System: 25-18-15-12-10-8-6-4-2-1 + 1 for fastest lap in top 10")
     print("Sprint Points: 8-7-6-5-4-3-2-1")
+    print(f"Training data: {current_year-2} and {current_year-1} seasons")
     print("="*80)
     
     # Collect historical data
     collector = F1HistoricalDataCollector()
-    historical_df = collector.collect_historical_data_2023_to_usgp_2025()
+    historical_df = collector.collect_historical_data_current_year()
     
     print(f"\nCollected {len(historical_df)} race/sprint records")
     print(f"Drivers in dataset: {historical_df['driver'].nunique()}")
@@ -641,17 +683,17 @@ def main():
         print("No data collected. Please check FastF1 connection and cache.")
         return
     
-    # Extract advanced features for current season (2025)
-    feature_engineer = F1AdvancedFeatureEngineer(season=2025)
+    # Extract advanced features for current season
+    feature_engineer = F1AdvancedFeatureEngineer(season=current_year)
     current_features = feature_engineer.extract_all_features(historical_df)
     
-    print(f"Extracted {len(current_features)} advanced features for 2025 season")
+    print(f"Extracted {len(current_features)} advanced features for {current_year} season")
     
     # Train and predict with advanced model
     predictor = F1AdvancedPredictor()
     predictor.train_model(historical_df)
     
-    champion_predictions = predictor.predict_2025_champion(current_features)
+    champion_predictions = predictor.predict_champion(current_features, current_year)
     
     # Sort predictions and ensure exactly 20 drivers
     sorted_predictions = sorted(champion_predictions.items(), key=lambda x: x[1], reverse=True)
@@ -670,63 +712,28 @@ def main():
     # Sort again and take top 20
     sorted_predictions = sorted(sorted_predictions, key=lambda x: x[1], reverse=True)[:20]
     
-    print("\n" + "="*80)
-    print("2025 F1 CHAMPION PREDICTIONS (20 DRIVERS) - ADVANCED MODEL")
-    print("="*80)
+    # Separate active and eliminated drivers
+    active_drivers = [(driver, prob) for driver, prob in sorted_predictions if prob > 0]
+    eliminated_drivers = [(driver, prob) for driver, prob in sorted_predictions if prob == 0]
     
-    for i, (driver, prob) in enumerate(sorted_predictions, 1):
-        if prob == 0.0:  # Mathematically eliminated
-            print(f"{i:2d}. {driver:3s}: {prob*100:6.2f}% **MATHEMATICALLY ELIMINATED**")
-        else:
-            print(f"{i:2d}. {driver:3s}: {prob*100:6.2f}%")
+    # Sort eliminated drivers by points (descending)
+    eliminated_drivers_sorted = sorted(eliminated_drivers, 
+                                     key=lambda x: current_features.get(f"{x[0]}_total_points", 0), 
+                                     reverse=True)
+    
+    print("\n" + "="*60)
+    print(f"{current_year} F1 CHAMPION PREDICTIONS - ACTIVE DRIVERS")
+    print("="*60)
+    
+    for i, (driver, prob) in enumerate(active_drivers, 1):
+        points = current_features.get(f"{driver}_total_points", 0)
+        print(f"{i:2d}. {driver:3s}: {prob*100:6.2f}% | Points: {int(points)}")
+    
     
     print(f"\nTotal drivers analyzed: {len(sorted_predictions)}")
+    print(f"Active contenders: {len(active_drivers)}")
+    print(f"Mathematically eliminated: {len(eliminated_drivers_sorted)}")
     
-    # Display detailed statistics for top drivers (only if data exists)
-    print(f"\nAdvanced Statistics for Top Drivers:")
-    print("-" * 80)
-    print("Driver: Prob% | Pts: Total Points | W: Wins | P: Podiums | Avg: Average Position | Std: Position Std Dev | Grid+: Grid Improvement")
-    print("-" * 80)
-    
-    for driver, prob in sorted_predictions[:5]:
-        points_key = f"{driver}_total_points"
-        wins_key = f"{driver}_wins"
-        podiums_key = f"{driver}_podiums"
-        avg_pos_key = f"{driver}_avg_finish_pos"
-        pos_std_key = f"{driver}_pos_std"
-        grid_improvement_key = f"{driver}_grid_to_finish_improvement"
-        
-        points = current_features.get(points_key, 0)
-        wins = current_features.get(wins_key, 0)
-        podiums = current_features.get(podiums_key, 0)
-        avg_pos = current_features.get(avg_pos_key, 99)
-        pos_std = current_features.get(pos_std_key, 0)
-        grid_improvement = current_features.get(grid_improvement_key, 0)
-        
-        # Convert to int for formatting, handle float values
-        points_int = int(points) if pd.notna(points) else 0
-        wins_int = int(wins) if pd.notna(wins) else 0
-        podiums_int = int(podiums) if pd.notna(podiums) else 0
-        avg_pos_float = float(avg_pos) if pd.notna(avg_pos) else 99.0
-        pos_std_float = float(pos_std) if pd.notna(pos_std) else 0.0
-        grid_improvement_float = float(grid_improvement) if pd.notna(grid_improvement) else 0.0
-        
-        if prob == 0.0:
-            print(f"{driver}: {prob*100:5.2f}% | Pts: {points_int:3d} | W: {wins_int} | P: {podiums_int} | Avg: {avg_pos_float:.1f} | Std: {pos_std_float:.1f} | Grid+{grid_improvement_float:+.1f} **MATHEMATICALLY ELIMINATED**")
-        else:
-            print(f"{driver}: {prob*100:5.2f}% | Pts: {points_int:3d} | W: {wins_int} | P: {podiums_int} | Avg: {avg_pos_float:.1f} | Std: {pos_std_float:.1f} | Grid+{grid_improvement_float:+.1f}")
-    
-    # Hamilton-specific analysis
-    hamilton_prob = next((prob for driver, prob in sorted_predictions if driver == 'HAM'), 0)
-    hamilton_points = current_features.get('HAM_total_points', 0)
-    print(f"\nLewis Hamilton: {hamilton_prob*100:.2f}% chance | {hamilton_points} points")
-    
-    if hamilton_prob == 0:
-        print("Hamilton has been mathematically eliminated from championship contention.")
-        print(f"Hamilton has {hamilton_points} points. Even with perfect results in remaining races,")
-        print("(all wins + fastest lap bonuses), he cannot surpass the current leader.")
-    elif hamilton_prob < 0.05:  # Less than 5%
-        print("Hamilton's chances are very low based on current performance.")
     # Save results to generic output directory
     results_df = pd.DataFrame(sorted_predictions, columns=['Driver', 'Probability'])
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -734,10 +741,9 @@ def main():
     # Create generic output directory
     output_dir = "f1_predictions"
     os.makedirs(output_dir, exist_ok=True)
-    output_file = os.path.join(output_dir, f"f1_champion_predictions_2025_{timestamp}.csv")
+    output_file = os.path.join(output_dir, f"f1_champion_predictions_{current_year}_{timestamp}.csv")
     results_df.to_csv(output_file, index=False)
-    print(f"\n🏁 Final advanced model complete! Results saved to: {output_file}")
-    print(f"Full results available in: {output_file}")
+    print(f"\n🏁 {current_year} F1 champion prediction complete! Results saved to: {output_file}")
 
 if __name__ == "__main__":
     main()
