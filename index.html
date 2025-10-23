@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEO-RACE | F1 Champion Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Cyberpunk Grid Background -->
+    <div id="grid-container">
+        <div class="grid-line horizontal"></div>
+        <div class="grid-line vertical"></div>
+        <div class="grid-line horizontal"></div>
+        <div class="grid-line vertical"></div>
+        <div class="grid-line horizontal"></div>
+        <div class="grid-line vertical"></div>
+        <div class="grid-line horizontal"></div>
+        <div class="grid-line vertical"></div>
+    </div>
+    
+    <!-- Scanning Lines -->
+    <div class="scan-line"></div>
+    <div class="scan-line-2"></div>
+    
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-flag-checkered"></i>
+                <h1>F1<span class="glitch-text">.</span></h1>
+            </div>
+            <nav class="nav">
+                <a href="#" class="nav-link active">CHAMPION PREDICTOR</a>
+                <!-- Modified: Added target="_blank" to open in new tab -->
+                <a href="https://github.com/KuantumKnight" target="_blank" class="nav-link">ABOUT ME</a>
+            </nav>
+        </header>
+        
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <h2 class="hero-title">F1 CHAMPION PREDICTOR <span class="pulse" id="year-title">2025</span></h2>
+                <p class="hero-subtitle">AI-POWERED CHAMPIONSHIP FORECASTING SYSTEM</p>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="active-count">0</div>
+                        <div class="stat-label">ACTIVE CONTENDERS</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="eliminated-count">0</div>
+                        <div class="stat-label">ELIMINATED</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="leader-driver">N/A</div>
+                        <div class="stat-label">CURRENT LEADER</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="controls">
+                <button id="predict-btn" class="predict-btn">
+                    <i class="fas fa-bolt"></i> RUN SIMULATION
+                </button>
+                <div class="sort-controls">
+                    <label for="sort-select">SORT BY:</label>
+                    <select id="sort-select">
+                        <option value="prob">PROBABILITY</option>
+                        <option value="points">POINTS</option>
+                        <option value="wins">WINS</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Progress Section -->
+            <section class="progress-section">
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="progress-text" id="progress-text">0%</div>
+                </div>
+                <div class="output-container">
+                    <h3 class="output-title"><i class="fas fa-terminal"></i> SIMULATION OUTPUT</h3>
+                    <div class="output-content" id="output-content"></div>
+                </div>
+            </section>
+            
+            <!-- Active Contenders -->
+            <section class="section">
+                <h3 class="section-title"><i class="fas fa-tachometer-alt"></i> ACTIVE CONTENDERS</h3>
+                <div class="drivers-grid" id="active-grid">
+                    <!-- Drivers will be loaded here -->
+                </div>
+            </section>
+            
+            <!-- Eliminated Drivers -->
+            <section class="section">
+                <h3 class="section-title"><i class="fas fa-times-circle"></i> MATHEMATICALLY ELIMINATED</h3>
+                <div class="drivers-grid" id="eliminated-grid">
+                    <!-- Drivers will be loaded here -->
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
