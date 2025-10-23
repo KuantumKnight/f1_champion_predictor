@@ -1,0 +1,91 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 Champion Predictor - The Ultimate Formula 1 Championship Forecaster</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Formula+1:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="f1-track-bg"></div>
+    
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-flag-checkered"></i>
+                <h1>F1 CHAMPION PREDICTOR</h1>
+            </div>
+            <nav class="nav">
+                <a href="#" class="nav-link active">Predictions</a>
+                <a href="#" class="nav-link">Leaderboard</a>
+                <a href="#" class="nav-link">Statistics</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <section class="hero">
+                <h2 id="year-title">F1 Champion Predictor 2025</h2>
+                <p class="subtitle">Powered by Advanced Machine Learning and Real-Time Data</p>
+                
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-value" id="active-count">0</div>
+                        <div class="stat-label">Active Contenders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="eliminated-count">0</div>
+                        <div class="stat-label">Eliminated</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="leader-driver">N/A</div>
+                        <div class="stat-label">Current Leader</div>
+                    </div>
+                </div>
+                
+                <button id="refresh-btn" class="refresh-btn">
+                    <i class="fas fa-sync-alt"></i> Refresh Predictions
+                </button>
+            </section>
+
+            <section class="predictions-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-trophy"></i> Active Contenders</h3>
+                    <div class="filter-options">
+                        <select id="sort-select">
+                            <option value="prob">By Probability</option>
+                            <option value="points">By Points</option>
+                            <option value="wins">By Wins</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="predictions-grid" id="active-grid">
+                    <!-- Active drivers will be loaded here -->
+                </div>
+                
+                <div class="section-header">
+                    <h3><i class="fas fa-times-circle"></i> Mathematically Eliminated</h3>
+                </div>
+                
+                <div class="predictions-grid" id="eliminated-grid">
+                    <!-- Eliminated drivers will be loaded here -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 F1 Champion Predictor. All data sourced from FastF1.</p>
+            <p>Powered by Machine Learning | Updated in Real-Time</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
