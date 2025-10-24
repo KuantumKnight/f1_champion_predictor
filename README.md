@@ -16,12 +16,4 @@ Predicting the Formula 1 World Champion using Machine Learning and Mathematical 
 - HTML, CSS, JS
 - GitHub Pages Hosting
 
-## 📊 Example Output
-| Driver | Probability |
-|--------|--------------|
-| VER | 58% |
-| LEC | 22% |
-| NOR | 15% |
-| HAM | 5% |
 
----
