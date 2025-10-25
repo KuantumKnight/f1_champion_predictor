@@ -1,7 +1,8 @@
 #  F1 Champion Predictor
 *(AI Assisted Project)*
 
-A powerful Formula 1 analytics and prediction engine that leverages machine learning, driver performance metrics, and race simulation algorithms to forecast championship outcomes with mathematical elimination logic.
+An advanced AI/ML-driven Formula 1 prediction system employing **supervised ensemble learning (Random Forest Regressor & Classifier), feature vectorization, probabilistic inference modeling, and rule-based elimination algorithms** to forecast championship outcomes with high precision.
+
 
 <img width="2560" height="1402" alt="Screenshot 2025-10-25 180012" src="https://github.com/user-attachments/assets/0c4f0038-b29b-47e6-99b2-87d4aaee5f43" />
 <img width="1734" height="927" alt="Screenshot 2025-10-25 180041" src="https://github.com/user-attachments/assets/09c3635d-6fa7-4d21-a79e-80c0e17dbb9d" />
