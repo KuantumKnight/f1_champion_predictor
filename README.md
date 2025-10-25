@@ -2,10 +2,12 @@
 *(AI Assisted Project)*
 
 A powerful Formula 1 analytics and prediction engine that leverages machine learning, driver performance metrics, and race simulation algorithms to forecast championship outcomes with mathematical elimination logic.
+
 <img width="2560" height="1402" alt="Screenshot 2025-10-25 180012" src="https://github.com/user-attachments/assets/0c4f0038-b29b-47e6-99b2-87d4aaee5f43" />
 <img width="1734" height="927" alt="Screenshot 2025-10-25 180041" src="https://github.com/user-attachments/assets/09c3635d-6fa7-4d21-a79e-80c0e17dbb9d" />
 <img width="1734" height="927" alt="Screenshot 2025-10-25 180137" src="https://github.com/user-attachments/assets/db5a0206-b271-4a35-ac75-7760cda1cc02" />
 
+*AS OF USGP 2025*
 
 ---
 
@@ -47,4 +49,4 @@ python webaddon.py
 
 ##  *Acknowledgments*
 Inspired by Formula 1 data analysis projects and sports analytics platforms.
-Powered by Python’s `pandas`, `scikit-learn`, and `matplotlib`.
+Powered by Python’s `pandas`, `scikit-learn`, `matplotlib` and `fastf1`.
