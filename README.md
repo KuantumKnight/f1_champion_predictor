@@ -12,7 +12,7 @@ An advanced AI/ML-driven Formula 1 prediction system employing **supervised ense
 
 ---
 
-## ⚙️ *Features*
+##  *Features*
 
 - *Data-Driven Predictions*: Analyzes real F1 driver stats, points, and performance trends
 - *Mathematical Elimination Logic*: Determines which drivers are still in contention
