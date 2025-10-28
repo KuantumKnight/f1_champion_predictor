@@ -9,7 +9,8 @@ An advanced AI/ML-driven Formula 1 prediction system employing **supervised ense
 <img width="1734" height="927" alt="Screenshot 2025-10-25 180137" src="https://github.com/user-attachments/assets/db5a0206-b271-4a35-ac75-7760cda1cc02" />
 
 *AS OF USGP 2025*
-
+<img width="2540" height="1408" alt="image" src="https://github.com/user-attachments/assets/8d50f2eb-4298-4c3d-bcb6-8cb715ac2cf7" />
+*AS OF Mexican GP 2025*
 ---
 
 ##  *Features*
